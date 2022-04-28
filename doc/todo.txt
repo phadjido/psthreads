@@ -1,0 +1,37 @@
+- General
+	+ configure: cache line size and cpu type
+	+ configure: assembly/library version of sjlj
+	+ configure: option for handoff
+	+ configure: option for stats
+
+- Psthreads
+	+ thread recycling
+	+ lazy stack allocation
+	+ locks (posix spin locks...)
+	+ general optimizations
+	+ stealing
+	+ alignment
+	+ faster barrier
+	+ handoff 
+	+ lock free queues (lifo)
+	~ tune stealing
+	~ peer-to-peer scheduling
+	~ preemption / preemptive safe: psthread_suspend/resume_vp(int) (special version)
+	- psthread_create_bunch (single allocation, single enqueue)
+	- hierarchical stealing
+	- multilevel local queues
+
+- UthLib:
+	+ st-1.8 (md.h OK, makefiles)
+	+ Features from uthlib for NthLib
+	+ st-1.9
+
+Notes:
+- EPCC: a) Local recycling queues in uthlib result in memory exhaustion
+	b) With LSA the above case does not occur (improved results)
+	c) With alloca, recycling is not necessary. Alternatively, we
+	   can maintain chunks of preallocated threads
+
+Done:
+	+ Exported CACHE_LINE_SIZE to psthread.h in order to define struct 
+	  psthread_cond_t correctly

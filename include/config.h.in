@@ -1,0 +1,200 @@
+/* include/config.h.in.  Generated from configure.in by autoheader.  */
+
+
+#ifndef _PS_CONFIG
+#define _PS_CONFIG
+
+
+/* explicit cache line size */
+#undef CACHE_LINE_SIZE
+
+/* Define to 1 if you have the `getcontext' function. */
+#undef HAVE_GETCONTEXT
+
+/* Define to 1 if you have the <inttypes.h> header file. */
+#undef HAVE_INTTYPES_H
+
+/* Define to 1 if you have the `longjmp' function. */
+#undef HAVE_LONGJMP
+
+/* Define to 1 if you have the `makecontext' function. */
+#undef HAVE_MAKECONTEXT
+
+/* Define to 1 if you have the <memory.h> header file. */
+#undef HAVE_MEMORY_H
+
+/* Define to 1 if you have the <pthread.h> header file. */
+#undef HAVE_PTHREAD_H
+
+/* Define to 1 if you have the `sched_yield' function. */
+#undef HAVE_SCHED_YIELD
+
+/* Define to 1 if you have the `setcontext' function. */
+#undef HAVE_SETCONTEXT
+
+/* Define to 1 if you have the `setjmp' function. */
+#undef HAVE_SETJMP
+
+/* Define to 1 if you have the <setjmp.h> header file. */
+#undef HAVE_SETJMP_H
+
+/* Define to 1 if you have the <stdint.h> header file. */
+#undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdlib.h> header file. */
+#undef HAVE_STDLIB_H
+
+/* Define to 1 if you have the <strings.h> header file. */
+#undef HAVE_STRINGS_H
+
+/* Define to 1 if you have the <string.h> header file. */
+#undef HAVE_STRING_H
+
+/* Define to 1 if you have the `swapcontext' function. */
+#undef HAVE_SWAPCONTEXT
+
+/* Define to 1 if you have the <sys/stat.h> header file. */
+#undef HAVE_SYS_STAT_H
+
+/* Define to 1 if you have the <sys/types.h> header file. */
+#undef HAVE_SYS_TYPES_H
+
+/* Define to 1 if you have the <ucontext.h> header file. */
+#undef HAVE_UCONTEXT_H
+
+/* Define to 1 if you have the <unistd.h> header file. */
+#undef HAVE_UNISTD_H
+
+/* Name of package */
+#undef PACKAGE
+
+/* Define to the address where bug reports for this package should be sent. */
+#undef PACKAGE_BUGREPORT
+
+/* Define to the full name of this package. */
+#undef PACKAGE_NAME
+
+/* Define to the full name and version of this package. */
+#undef PACKAGE_STRING
+
+/* Define to the one symbol short name of this package. */
+#undef PACKAGE_TARNAME
+
+/* Define to the home page for this package. */
+#undef PACKAGE_URL
+
+/* Define to the version of this package. */
+#undef PACKAGE_VERSION
+
+/* Queue-based fast barrier */
+#undef PS_BAREX_QUEUE
+
+/* Yield-based fast barrier */
+#undef PS_BAREX_YIELD
+
+/* single ready queue for threads */
+#undef PS_GLOBAL_QUEUE_ONLY
+
+/* Enable lock-free lifo queues */
+#undef PS_LOCK_FREE
+
+/* Enable handoff mechanism */
+#undef PS_P2P_HANDOFF
+
+/* Enable runtime statistics in PSthreads */
+#undef PS_STATS
+
+/* thread stealing for psthreads */
+#undef PS_STEALING
+
+/* yielding of virtual processors */
+#undef PS_YIELDVP
+
+/* for pthread affinity */
+#undef PTHREAD_AFFINITY
+
+/* The size of `int', as computed by sizeof. */
+#undef SIZEOF_INT
+
+/* The size of `long', as computed by sizeof. */
+#undef SIZEOF_LONG
+
+/* The size of `pthread_t', as computed by sizeof. */
+#undef SIZEOF_PTHREAD_T
+
+/* The size of `void *', as computed by sizeof. */
+#undef SIZEOF_VOID_P
+
+/* Define to 1 if you have the ANSI C header files. */
+#undef STDC_HEADERS
+
+/* Context management with ucontext_t */
+#undef UTH_CTXSW_MCSC
+
+/* Context management with jmpbuf */
+#undef UTH_CTXSW_SJLJ
+
+/* Local recycling of threads */
+#undef UTH_LOCAL_REUSE
+
+/* malloc-based memory stack allocation */
+#undef UTH_MALLOC_STACK
+
+/* stack address for makecontext */
+#undef UTH_MCSC_SKADDR
+
+/* stack size for makecontext */
+#undef UTH_MCSC_SKSIZE
+
+/* page aligned stack, otherwise 64byte aligned */
+#undef UTH_PAGE_ALIGNED_STACK
+
+/* Recycling of threads */
+#undef UTH_REUSE
+
+/* Keep track of current underlying thread */
+#undef UTH_SI_KEEP_CURRENT_THREAD
+
+/* Stack based self identification */
+#undef UTH_SI_SB
+
+/* Thread-specific-data based self identification */
+#undef UTH_SI_TSD
+
+/* Virtual-processor based self identification */
+#undef UTH_SI_VPID
+
+/* define for stack growth */
+#undef UTH_STACK_GROWS
+
+/* Enable runtime statistics in UthLib */
+#undef UTH_STATS
+
+/* Version number of package */
+#undef VERSION
+
+/* */
+#undef __SYSCOMPILER_cygwin
+
+/* */
+#undef __SYSCOMPILER_gcc
+
+/* */
+#undef __SYSCOMPILER_intel
+
+/* */
+#undef __SYSCOMPILER_mipspro
+
+/* */
+#undef __SYSCOMPILER_sun
+
+/* Define to `__inline__' or `__inline' if that's what the C compiler
+   calls it, or to nothing if 'inline' is not supported under any name.  */
+#ifndef __cplusplus
+#undef inline
+#endif
+
+/* not found */
+#undef sched_yield
+
+#endif

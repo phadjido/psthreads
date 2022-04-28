@@ -1,0 +1,18 @@
+PSthreads and UthLib
+-----------------------------------------------------------------------
+Description:
+UthLib (Underlying Threads Library) is a portable non-preemptive
+thread package for building two-level thread libraries on top of
+POSIX Threads.
+
+PSthreads (Process Scope threads) is a runtime library that
+takes advantage of UthLib and implements and two-level thread
+model.
+
+License: 
+Since UthLib has been derived from the State Threads Library,
+it is distributed according to the Mozilla Public License Version
+
+
+For more information: 
+Read the included documentation file.
