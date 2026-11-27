@@ -302,5 +302,6 @@ uth_stack_t *_uth_stack_new_sp(uth_stack_t *stackinfo, int stack_size, char *vad
 void _uth_stack_free(uth_stack_t *ts);
 uth_t *_uth_self_from_stack(void);
 int _uth_get_vpid_tsd(void);
+int uth_get_vpid_tsd(void);
 
 #endif /* !__UTH_COMMON_H__ */

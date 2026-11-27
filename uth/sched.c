@@ -43,6 +43,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <errno.h>
+#include <stdint.h>
 #if !defined(WIN32_MSVC) && !defined(MINGW)
 #include <unistd.h>
 #include <fcntl.h>
@@ -319,7 +320,7 @@ uth_t *uth_vp_init(int vpid, void *arg)
 	thread->vp_id = vpid;
 	thread->arg = NULL;
         thread->retval = (void *) 0xDEAD;
-	pthread_setspecific(_uth_vp_key, (void *)vpid);
+	pthread_setspecific(_uth_vp_key, (void *)(intptr_t)vpid);
 #if defined(UTH_SI_TSD)
 	pthread_setspecific(_uth_curr_key, thread);
 #endif
@@ -694,7 +695,7 @@ void uth_self_identification_method(void)
 int _uth_get_vpid_tsd(void)
 {
 	int vp;
-	vp = (int) pthread_getspecific(_uth_vp_key);
+	vp = (int) (intptr_t)pthread_getspecific(_uth_vp_key);
 
 	return vp;
 }

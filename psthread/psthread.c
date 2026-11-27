@@ -24,6 +24,8 @@
     \brief PSthreads runtime library
  */
 
+#define _GNU_SOURCE
+
 #include "common.h"
 #include <pthread.h>
 #include <stdlib.h>
@@ -494,12 +496,12 @@ void _ps_scheduler_thread_start(void *arg)
 }
 
 
-int phys_cpu[8] = {0, 6, 1, 4, 2, 5, 3, 7};	/* paraguay */
+//int phys_cpu[8] = {0, 6, 1, 4, 2, 5, 3, 7};	/* paraguay */
 
 void _bind_cpu(int vp)                
 {
 	int cpu;
-	unsigned long mask;
+	cpu_set_t mask;
 	if (!_ps_bindcpu) return;
 #ifdef PTHREAD_AFFINITY
 #if 1
@@ -507,13 +509,20 @@ void _bind_cpu(int vp)
 #else
 	cpu = phys_cpu[vp];
 #endif
+
+#ifdef __linux__
 	printf("binding vp %d on cpu %d\n", vp, cpu);
-	mask = (1 << cpu);
+	CPU_ZERO(&mask);
+	CPU_SET(cpu, &mask);
+	//mask = (1 << cpu);
 
 	/* bind process to processor 0 */
-	if (pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask) <0) {
-		perror("pthread_setaffinity_np");
+        int ret = pthread_setaffinity_np(pthread_self(), sizeof(mask), &mask);
+	if (ret != 0) {
+                fprintf(stderr, "pthread_setaffinity_np: %s\n", strerror(ret));
 	}
+#endif
+
 #else
 #endif
 }
@@ -688,14 +697,14 @@ int psthread_init(int vps, unsigned long stacksize)
 	{
 	char *s, ch;
 	s = (char *) getenv("PSTHREADS_NVPS");
-	if (s != 0 && sscanf(s, "%d", &i) == 1 && i > 0)
+	if (s != 0 && sscanf(s, "%ld", &i) == 1 && i > 0)
 		_ps_nvps = i;
 
 	printf("psthread_init: overriding for %d workers\n", _ps_nvps);
 
 	s = (char *) getenv("PSTHREADS_STEALING");
-	if (s != 0 && sscanf(s, "%d", &i) == 1 && i > 0) {
-		printf("work stealing...[%d]\n", i);
+	if (s != 0 && sscanf(s, "%ld", &i) == 1 && i > 0) {
+		printf("work stealing...[%ld]\n", i);
 		_ps_stealing_env = i;
 		if ((_ps_stealing_env == _PS_WORK_STEALING_ENABLED) || (_ps_stealing_env == _PS_WORK_STEALING_DYNAMIC)) {
 			printf("enabling work stealing...\n");

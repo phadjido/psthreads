@@ -59,6 +59,12 @@ unsigned long uth_vp_self(void);
 
 extern void uth_stats(void);
 extern void uth_info(void);
+
+extern void uth_self_identification_method();
+extern int uth_get_stacksize();
+extern int uth_get_vpid_tsd();
+
+
 #ifdef __cplusplus
 }
 #endif
