@@ -256,7 +256,7 @@ int uth_init(long stacksize)
 		_uth_queue_init(&reuse_uth_lq[i]);
 	}
 
-	_UTH_PAGE_SIZE = getpagesize();
+	_UTH_PAGE_SIZE = sysconf(_SC_PAGESIZE);
 	if (stacksize == 0)
 		_UTH_STACK_SIZE = UTH_DEFAULT_STACK_SIZE;
 	else
@@ -297,7 +297,7 @@ uth_t *uth_vp_init(int vpid, void *arg)
 		for (i = 0; i < MAX_VPS; i++) {
 			_uth_queue_init(&reuse_uth_lq[i]);
 		}
-		_UTH_PAGE_SIZE = getpagesize();
+		_UTH_PAGE_SIZE = sysconf(_SC_PAGESIZE);
 		_UTH_STACK_SIZE = UTH_DEFAULT_STACK_SIZE;
 
 		memset(&_uth_stats, 0, sizeof(uth_stats_t));
@@ -731,7 +731,13 @@ uth_t *_uth_self_from_stack()
 	sp = (unsigned long) &sp;
 
 //	printf("[%p] A sp 0x%lx main_sp 0x%lx  (%ld)\n", pthread_self(), sp, main_sp, abs(sp - main_sp));
-	if (abs(sp - main_sp) < 1024*1024) { 
+
+	unsigned long distance;
+
+	distance = (sp >= main_sp) ? sp - main_sp : main_sp - sp;
+
+	if (distance < 1024UL * 1024UL) {
+//	if (abs(sp - main_sp) < 1024*1024) {
 //		printf("[%p] B sp 0x%lx main_sp 0x%lx  (%ld)\n", pthread_self(), sp, main_sp, abs(sp - main_sp));
 		thread = main_uth;
 ////		printf("%s: returning main_uth:%p\n", __FUNCTION__, main_uth);

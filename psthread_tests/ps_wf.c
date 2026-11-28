@@ -25,6 +25,7 @@
  */
 
 #include <psthread.h>
+#include <unistd.h>
 #include <stdio.h>
 
 extern void kthread_sleep(int);

@@ -501,7 +501,6 @@ void _ps_scheduler_thread_start(void *arg)
 void _bind_cpu(int vp)                
 {
 	int cpu;
-	cpu_set_t mask;
 	if (!_ps_bindcpu) return;
 #ifdef PTHREAD_AFFINITY
 #if 1
@@ -511,6 +510,8 @@ void _bind_cpu(int vp)
 #endif
 
 #ifdef __linux__
+	cpu_set_t mask;
+
 	printf("binding vp %d on cpu %d\n", vp, cpu);
 	CPU_ZERO(&mask);
 	CPU_SET(cpu, &mask);

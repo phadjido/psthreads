@@ -143,6 +143,7 @@ psthread_t psthread_self_stk(void);
 void psthread_exit();
 void psthread_yield();
 void psthread_sleep(int ms);
+void psthread_switch_and_yield(psthread_t from, psthread_t to);
 
 void psthread_lock_init(psthread_lock_t *spin);
 int psthread_lock_acquire(psthread_lock_t *spin);

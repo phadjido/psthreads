@@ -47,7 +47,7 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
-#include <malloc.h>
+//#include <malloc.h>
 #if !defined(WIN32_MSVC) && !defined(MINGW)
 #include <sys/mman.h>
 #endif

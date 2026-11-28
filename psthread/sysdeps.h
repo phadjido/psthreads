@@ -82,6 +82,8 @@
       #define FENCE asm volatile("membar #Sync")
     #endif
   #endif
+#elif defined(__aarch64__) || defined(__arm64__)
+  #define FENCE __asm__ __volatile__("dmb ish" ::: "memory")
 #elif defined(__cpu_mips)
   #ifdef __sys_sgi
     /* Most (?) SGI systems, such as the Origins & Onyxes guarantee

@@ -25,6 +25,7 @@
  */
 
 #include <psthread.h>
+#include <uth.h>
 #include <stdio.h>
 #include <stdlib.h>
 

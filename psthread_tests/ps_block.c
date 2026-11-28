@@ -26,6 +26,7 @@
 
 #include <psthread.h>
 #include <stdio.h>
+#include <time.h>
 
 extern void kthread_sleep(int);
 
@@ -44,7 +45,9 @@ void mythread(void *arg)
 	for (i = 0; i < 100; i++) {
 		psthread_yield();
 		fprintf(stderr, "[0x%lx]: thread %p (arg=%ld) running on vp %d. \n", psthread_vp_self(), psthread_self(),t, psthread_current_vp());
-		usleep(10*1000);
+		//usleep(10*1000);
+		struct timespec ts = {0, 10 * 1000000L};
+		nanosleep(&ts, NULL);
 
 	}
 
