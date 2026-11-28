@@ -1,4 +1,4 @@
-/* include/config.h.in.  Generated from configure.in by autoheader.  */
+/* include/config.h.in.  Generated from configure.ac by autoheader.  */
 
 
 #ifndef _PS_CONFIG
@@ -8,31 +8,28 @@
 /* explicit cache line size */
 #undef CACHE_LINE_SIZE
 
-/* Define to 1 if you have the `getcontext' function. */
+/* Define to 1 if you have the 'getcontext' function. */
 #undef HAVE_GETCONTEXT
 
 /* Define to 1 if you have the <inttypes.h> header file. */
 #undef HAVE_INTTYPES_H
 
-/* Define to 1 if you have the `longjmp' function. */
+/* Define to 1 if you have the 'longjmp' function. */
 #undef HAVE_LONGJMP
 
-/* Define to 1 if you have the `makecontext' function. */
+/* Define to 1 if you have the 'makecontext' function. */
 #undef HAVE_MAKECONTEXT
-
-/* Define to 1 if you have the <memory.h> header file. */
-#undef HAVE_MEMORY_H
 
 /* Define to 1 if you have the <pthread.h> header file. */
 #undef HAVE_PTHREAD_H
 
-/* Define to 1 if you have the `sched_yield' function. */
+/* Define to 1 if you have the 'sched_yield' function. */
 #undef HAVE_SCHED_YIELD
 
-/* Define to 1 if you have the `setcontext' function. */
+/* Define to 1 if you have the 'setcontext' function. */
 #undef HAVE_SETCONTEXT
 
-/* Define to 1 if you have the `setjmp' function. */
+/* Define to 1 if you have the 'setjmp' function. */
 #undef HAVE_SETJMP
 
 /* Define to 1 if you have the <setjmp.h> header file. */
@@ -40,6 +37,9 @@
 
 /* Define to 1 if you have the <stdint.h> header file. */
 #undef HAVE_STDINT_H
+
+/* Define to 1 if you have the <stdio.h> header file. */
+#undef HAVE_STDIO_H
 
 /* Define to 1 if you have the <stdlib.h> header file. */
 #undef HAVE_STDLIB_H
@@ -50,7 +50,7 @@
 /* Define to 1 if you have the <string.h> header file. */
 #undef HAVE_STRING_H
 
-/* Define to 1 if you have the `swapcontext' function. */
+/* Define to 1 if you have the 'swapcontext' function. */
 #undef HAVE_SWAPCONTEXT
 
 /* Define to 1 if you have the <sys/stat.h> header file. */
@@ -113,19 +113,21 @@
 /* for pthread affinity */
 #undef PTHREAD_AFFINITY
 
-/* The size of `int', as computed by sizeof. */
+/* The size of 'int', as computed by sizeof. */
 #undef SIZEOF_INT
 
-/* The size of `long', as computed by sizeof. */
+/* The size of 'long', as computed by sizeof. */
 #undef SIZEOF_LONG
 
-/* The size of `pthread_t', as computed by sizeof. */
+/* The size of 'pthread_t', as computed by sizeof. */
 #undef SIZEOF_PTHREAD_T
 
-/* The size of `void *', as computed by sizeof. */
+/* The size of 'void *', as computed by sizeof. */
 #undef SIZEOF_VOID_P
 
-/* Define to 1 if you have the ANSI C header files. */
+/* Define to 1 if all of the C89 standard headers exist (not just the ones
+   required in a freestanding environment). This macro is provided for
+   backward compatibility; new code need not use it. */
 #undef STDC_HEADERS
 
 /* Context management with ucontext_t */
@@ -188,7 +190,7 @@
 /* */
 #undef __SYSCOMPILER_sun
 
-/* Define to `__inline__' or `__inline' if that's what the C compiler
+/* Define to '__inline__' or '__inline' if that's what the C compiler
    calls it, or to nothing if 'inline' is not supported under any name.  */
 #ifndef __cplusplus
 #undef inline

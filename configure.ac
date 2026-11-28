@@ -23,16 +23,16 @@ dnl This file must be processed by autoconf
 
 dnl Configure.in file for PSthreads/UthLib
 
-AC_INIT(psthreads,1.0.4,,psthreads)
-AC_CONFIG_AUX_DIR(build-aux)
-AC_CANONICAL_SYSTEM
+AC_INIT(psthreads,1.0.5,,psthreads)
+AC_CONFIG_AUX_DIR([build-aux])
+AC_CANONICAL_HOST
 
-AM_CONFIG_HEADER(include/config.h)
+AC_CONFIG_HEADERS([include/config.h])
 AM_INIT_AUTOMAKE
 
 
 AC_PROG_CC
-AC_LANG_C
+AC_LANG([C])
 AC_PROG_MAKE_SET
 AC_PROG_RANLIB
 AM_PROG_AS
@@ -149,11 +149,10 @@ fi
 #=============================================================================
 AC_MSG_CHECKING([stack growth direction])
 AC_RUN_IFELSE(
-[[
+[AC_LANG_SOURCE([[
 #include <stdio.h>
 #include <stdlib.h>
 
-static int stack_grows_downward(int counter, char *baseptr) {
 static int stack_grows_downward(int counter, char *baseptr)
 {
 #if defined(__aarch64__) || defined(__arm64__) || defined(__x86_64__) || defined(__i386__)
@@ -181,7 +180,7 @@ int main(int argc, char *argv[]) {
 	fclose(fp);
 	exit(0);
 }
-]],
+]])],
 ac_cv_check_stackgrowth=`cat conftestval`,
 ac_cv_check_stackgrowth=down,
 ac_cv_check_stackgrowth=down
@@ -201,7 +200,7 @@ AC_DEFINE_UNQUOTED(UTH_STACK_GROWS, $val, [define for stack growth])
 #=============================================================================
 csmopt=""
 AC_ARG_WITH(csm,
-	AC_HELP_STRING([--with-csm=method], [context switch method (sjlj, mcsc)]),
+	AS_HELP_STRING([--with-csm=method], [context switch method (sjlj, mcsc)]),
 	[
 	case $withval in
 		sjlj| mcsc ) csmopt=$withval ;;
@@ -211,9 +210,21 @@ AC_ARG_WITH(csm,
 )
 
 if test ".$csmopt" = "."; then
-	AC_MSG_NOTICE([context switch method not defined - using default (sjlj)])
-	csmopt=sjlj
+	case "$host" in
+		aarch64-apple-darwin*|arm64-apple-darwin*)
+			csmopt=mcsc
+			;;
+		*)
+			csmopt=sjlj
+			;;
+	esac
+	AC_MSG_NOTICE([using default context switch method ($csmopt)])
 fi
+
+if test "$OS" = "DARWIN" && test "$csmopt" = "mcsc"; then
+    CPPFLAGS="$CPPFLAGS -D_XOPEN_SOURCE=700 -D_DARWIN_C_SOURCE"
+fi
+
 
 if test ".$csmopt" = ".sjlj"; then
 	AC_CHECK_HEADERS(setjmp.h)
@@ -254,7 +265,7 @@ AM_CONDITIONAL(COMPILE_MD_S, test ".$compile_md_s" = ".yes")
 
 USEASMSJLJ=""
 AC_ARG_ENABLE(asmsjlj,
-	AC_HELP_STRING([--enable-asmsjlj], [enable assembly based sjlj (default:disabled)]),
+	AS_HELP_STRING([--enable-asmsjlj], [enable assembly based sjlj (default:disabled)]),
 	if eval "test x$enable_asmsjlj = xyes"; then
 		if test ".$compile_md_s" = ".yes"; then
 			USEASMSJLJ="-DMD_USE_BUILTIN_SETJMP"
@@ -274,7 +285,7 @@ if test ".$csmopt" = ".sjlj"; then
 
 AC_MSG_CHECKING([for usable setjmp/longjmp])
 AC_RUN_IFELSE(
-[[
+[AC_LANG_SOURCE([[
 	#include <stdio.h>
 	#include <setjmp.h>
 
@@ -310,7 +321,7 @@ AC_RUN_IFELSE(
 		}
 		exit(0);
 	}
-]],
+]])],
 [check_sjlj=`cat conftestval`], [check_sjlj=no], [check_sjlj=no])
 
 AC_MSG_RESULT([$check_sjlj])
@@ -333,7 +344,7 @@ if test ".$OS" != ".CYGWIN" && test ".$OS" != ".MINGW" ; then
 
 AC_MSG_CHECKING([for usable makecontext,swapcontext])
 AC_RUN_IFELSE(
-[[
+[AC_LANG_SOURCE([[
 #include <stdio.h>
 #include <stdlib.h>
 #include <ucontext.h>                 
@@ -379,7 +390,7 @@ int main(int argc, char *argv[]) {
 	/* die successfully */
 	exit(0);
 }
-]],
+]])],
 [check_mcsc=`cat conftestval`], [check_mcsc=no], [check_mcsc=no])
 
 AC_MSG_RESULT([$check_mcsc])
@@ -408,7 +419,7 @@ if test ".$OS" != ".CYGWIN" && test ".$OS" != ".MINGW" ; then
 
 AC_MSG_CHECKING(for stack setup via makecontext)
 AC_RUN_IFELSE(
-[[
+[AC_LANG_SOURCE([[
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -491,8 +502,7 @@ int main(int argc, char *argv[])
 	fclose(fp);
 	exit(0);
 }
-]],
-[
+]])],
 dnl # test successully passed
 ac_cv_stacksetup=`cat conftestval`
 ac_cv_stacksetup="ok:$ac_cv_stacksetup"
@@ -549,7 +559,7 @@ AM_CONDITIONAL(STACK_MCSC, test ".$csmopt" = ".mcsc")
 syncopt=""
 mutexspin=""
 AC_ARG_WITH(sync,
-	AC_HELP_STRING([--with-sync=method], [posix synchronization mechanism (mutex, mutex_try, spin, spin_try)]),
+	AS_HELP_STRING([--with-sync=method], [posix synchronization mechanism (mutex, mutex_try, spin, spin_try)]),
 	[
 	case $withval in
 		mutex| mutex_try )	syncopt=$withval 
@@ -628,7 +638,7 @@ fi
 #==============================================================================
 NVPS="16"
 AC_ARG_WITH(maxvps,
-	AC_HELP_STRING([--with-maxvps=num], [maximum number of virtual processors (default:16)]),
+	AS_HELP_STRING([--with-maxvps=num], [maximum number of virtual processors (default:16)]),
 	[
 	NVPS=$withval
 	]
@@ -640,7 +650,7 @@ AC_SUBST(NVPS)
 #==============================================================================
 emu_uth=""
 AC_ARG_ENABLE(uth2pth,
-	AC_HELP_STRING([--enable-uth2pth], [emulate user-level threads on top of POSIX threads (default:disabled)]),
+	AS_HELP_STRING([--enable-uth2pth], [emulate user-level threads on top of POSIX threads (default:disabled)]),
 	if eval "test x$enable_uth2pth = xyes"; then
 		emu_uth="yes"
 		AC_MSG_NOTICE([emulating user-level threads context switch method not applied])
@@ -653,7 +663,7 @@ AM_CONDITIONAL(PTH, test ".$emu_uth" = ".yes")
 # Enable debugging
 #==============================================================================
 AC_ARG_ENABLE(debug,
-	AC_HELP_STRING([--enable-debug], [enable debugging (default:disabled)]),
+	AS_HELP_STRING([--enable-debug], [enable debugging (default:disabled)]),
 	if eval "test x$enable_debug = xyes"; then
 		DEBUGFLAG="-g"
 	else
@@ -667,7 +677,7 @@ AC_SUBST(DEBUG_FLAG)
 # Additional options
 #==============================================================================
 AC_ARG_ENABLE(handoff,
-	AC_HELP_STRING([--enable-handoff], [enable handoff mechanism (default: disabled)]),
+	AS_HELP_STRING([--enable-handoff], [enable handoff mechanism (default: disabled)]),
 	if eval "test x$enable_handoff = xyes"; then
 		AC_DEFINE(PS_P2P_HANDOFF,,[Enable handoff mechanism])
 	fi,
@@ -675,7 +685,7 @@ AC_ARG_ENABLE(handoff,
 
 
 AC_ARG_ENABLE(lockfree,
-	AC_HELP_STRING([--enable-lockfree], [enable lockfree lifo queues (default: disabled)]),
+	AS_HELP_STRING([--enable-lockfree], [enable lockfree lifo queues (default: disabled)]),
 	if eval "test x$enable_lockfree = xyes"; then
 		AC_DEFINE(PS_LOCK_FREE,,[Enable lock-free lifo queues])
 	fi,
@@ -686,7 +696,7 @@ AC_ARG_ENABLE(lockfree,
 #==============================================================================
 stack_alignment="page"
 AC_ARG_ENABLE(stackalign64,
-	AC_HELP_STRING([--enable-stackalign64], [enable 64-byte stack alignment (default:page alignment)]),
+	AS_HELP_STRING([--enable-stackalign64], [enable 64-byte stack alignment (default:page alignment)]),
 	if eval "test x$enable_stackalign64 = xyes"; then
 		stack_alignment="64B"
 	else
@@ -703,7 +713,7 @@ fi
 #==============================================================================
 stack_alloc="alloc"
 AC_ARG_ENABLE(stackalloc,
-	AC_HELP_STRING([--enable-mmap], [enable mmap-based memory stack allocation (default:malloc-based)]),
+	AS_HELP_STRING([--enable-mmap], [enable mmap-based memory stack allocation (default:malloc-based)]),
 	if eval "test x$enable_stackalloc = xyes"; then
 		stack_alloc="mmap"
 	else
@@ -720,7 +730,7 @@ fi
 # ==============================================================================
 self_identification=""
 AC_ARG_WITH(si,
-	AC_HELP_STRING([--with-si=method], [self identification: vpid, tsd, stack (default:vpid)]),
+	AS_HELP_STRING([--with-si=method], [self identification: vpid, tsd, stack (default:vpid)]),
 	[
 	case $withval in
 		vpid )	AC_DEFINE(UTH_SI_VPID,,[Virtual-processor based self identification])
@@ -741,7 +751,7 @@ if test ".$self_identification" = "."; then
 fi
 
 AC_ARG_ENABLE(keepcurrent,
-	AC_HELP_STRING([--enable-keepcurrent], [keep track of current thread]),
+	AS_HELP_STRING([--enable-keepcurrent], [keep track of current thread]),
 	if eval "test x$enable_keepcurrent = xyes"; then
 		AC_DEFINE(UTH_SI_KEEP_CURRENT_THREAD,,[Keep track of current underlying thread])
 	fi,
@@ -752,7 +762,7 @@ AC_ARG_ENABLE(keepcurrent,
 # ==============================================================================
 thread_recycling=""
 AC_ARG_WITH(recycling,
-	AC_HELP_STRING([--with-recycling=method], [recycling of threads: local, global, none (default:local)]),
+	AS_HELP_STRING([--with-recycling=method], [recycling of threads: local, global, none (default:local)]),
 	[
 	thread_recycling="yes"
 	case $withval in
@@ -778,7 +788,7 @@ fi
 # ==============================================================================
 barrier_mechanism=""
 AC_ARG_WITH(barrier,
-	AC_HELP_STRING([--with-barrier=method], [fast barrier mechanism: yield, queue (default:yield)]),
+	AS_HELP_STRING([--with-barrier=method], [fast barrier mechanism: yield, queue (default:yield)]),
 	[
 	barrier_mechanism="yes"
 	case $withval in
@@ -798,7 +808,7 @@ fi
 # Enable stealing of threads
 #==============================================================================
 AC_ARG_ENABLE(stealing,
-	AC_HELP_STRING([--enable-stealing], [enable thread stealing for psthreads (default:disabled)]),
+	AS_HELP_STRING([--enable-stealing], [enable thread stealing for psthreads (default:disabled)]),
 	if eval "test x$enable_stealing = xyes"; then
 		AC_DEFINE(PS_STEALING,,[thread stealing for psthreads])
 	fi,
@@ -809,7 +819,7 @@ AC_ARG_ENABLE(stealing,
 # Enable single ready queue for dispatching
 #==============================================================================
 AC_ARG_ENABLE(singlequeue,
-	AC_HELP_STRING([--enable-singlequeue], [enable single ready queue for thread dispatching (default:disabled)]),
+	AS_HELP_STRING([--enable-singlequeue], [enable single ready queue for thread dispatching (default:disabled)]),
 	if eval "test x$enable_singlequeue = xyes"; then
 		AC_DEFINE(PS_GLOBAL_QUEUE_ONLY,,[single ready queue for threads])
 	fi,
@@ -821,7 +831,7 @@ AC_ARG_ENABLE(singlequeue,
 yieldvp_flag=""
 
 AC_ARG_ENABLE(yieldvp,
-	AC_HELP_STRING([--disable-yieldvp], [disable yielding of idle virtual processors (default:enabled)]),
+	AS_HELP_STRING([--disable-yieldvp], [disable yielding of idle virtual processors (default:enabled)]),
 	if eval "test x$enable_yieldvp = xyes"; then
 		yieldvp_flag="yes"
 		AC_DEFINE(PS_YIELDVP,,[yielding of virtual processors])
@@ -873,7 +883,7 @@ defcls=""
 
 AC_MSG_CHECKING([for default cache line size])
 AC_RUN_IFELSE(
-[[
+[AC_LANG_SOURCE([[
 /* Borrowed from OMPi (lib/sysdeps.h) */
 #include <stdio.h>
 
@@ -960,7 +970,7 @@ int main(int argc, char *argv[]) {
 	/* die successfully */
 	exit(0);
 }
-]],
+]])],
 [defcls=`cat conftestval`], [defcls="128"], [defcls="128"])
 
 AC_MSG_RESULT([$defcls])
@@ -970,7 +980,7 @@ AC_MSG_RESULT([$defcls])
 #=============================================================================
 clsize=""
 AC_ARG_WITH(cachelinesize,
-	AC_HELP_STRING([--with-cachelinesize=value], [cache line size]),
+	AS_HELP_STRING([--with-cachelinesize=value], [cache line size]),
 	[
 		clsize=$withval
 		AC_MSG_NOTICE([cache line size is set to $clsize])
@@ -991,7 +1001,7 @@ AC_DEFINE_UNQUOTED(CACHE_LINE_SIZE, $clsize, [explicit cache line size])
 # Statistics
 #=============================================================================
 AC_ARG_ENABLE(uthstats,
-	AC_HELP_STRING([--enable-uthstats], [enable runtime statistics in UthLib]),
+	AS_HELP_STRING([--enable-uthstats], [enable runtime statistics in UthLib]),
 	if eval "test x$enable_uthstats = xyes"; then
 		AC_DEFINE(UTH_STATS,,[Enable runtime statistics in UthLib])
 	fi,
@@ -999,7 +1009,7 @@ AC_ARG_ENABLE(uthstats,
 
 
 AC_ARG_ENABLE(psstats,
-	AC_HELP_STRING([--enable-psstats], [enable runtime statistics in PSthreads]),
+	AS_HELP_STRING([--enable-psstats], [enable runtime statistics in PSthreads]),
 	if eval "test x$enable_psstats = xyes"; then
 		AC_DEFINE(PS_STATS,,[Enable runtime statistics in PSthreads])
 	fi,
@@ -1031,4 +1041,13 @@ fi
 #=============================================================================
 # Create Makefiles
 #=============================================================================
-AC_OUTPUT(Makefile uth/Makefile psthread/Makefile uth_tests/Makefile psthread_tests/Makefile scripts/Makefile)
+AC_CONFIG_FILES([
+    Makefile
+    uth/Makefile
+    psthread/Makefile
+    uth_tests/Makefile
+    psthread_tests/Makefile
+    scripts/Makefile
+])
+
+AC_OUTPUT
