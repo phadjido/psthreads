@@ -68,7 +68,7 @@ int main(int argc, char *argv[])
 		}
 		psthread_waitall();
 		t1 = psthread_gettime();
-		fprintf(stderr, "A [0x%lx]: Elapsed Time for %d threads =%f seconds [counter=%d]\n", psthread_vp_self(), USER_LEVEL_THREADS, t1-t0, ctr);
+		fprintf(stderr, "A [0x%lx]: Elapsed Time for %d threads =%f seconds [counter=%ld]\n", psthread_vp_self(), USER_LEVEL_THREADS, t1-t0, ctr);
 	}
 
 	printf("\n");
@@ -83,7 +83,7 @@ int main(int argc, char *argv[])
 		}
 		psthread_waitall();
 		t1 = psthread_gettime();
-		fprintf(stderr, "B [0x%lx]: Elapsed Time for %d threads =%f seconds [counter=%d]\n", psthread_vp_self(), USER_LEVEL_THREADS, t1-t0, ctr);
+		fprintf(stderr, "B [0x%lx]: Elapsed Time for %d threads =%f seconds [counter=%ld]\n", psthread_vp_self(), USER_LEVEL_THREADS, t1-t0, ctr);
 	}
 //#endif
 	printf("\n\n");

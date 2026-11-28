@@ -503,15 +503,18 @@ int main(int argc, char *argv[])
 	exit(0);
 }
 ]])],
-dnl # test successully passed
-ac_cv_stacksetup=`cat conftestval`
-ac_cv_stacksetup="ok:$ac_cv_stacksetup"
-],[
-dnl # test failed
-ac_cv_stacksetup='guessed:(skaddr),(sksize)'
-],[
-dnl # cross-platform => failed
-ac_cv_stacksetup='guessed:(skaddr),(sksize)'
+[
+	dnl # test successully passed
+	ac_cv_stacksetup=`cat conftestval`
+	ac_cv_stacksetup="ok:$ac_cv_stacksetup"
+],
+[
+	dnl # test failed
+	ac_cv_stacksetup='guessed:(skaddr),(sksize)'
+],
+[
+	dnl # cross-platform => failed
+	ac_cv_stacksetup='guessed:(skaddr),(sksize)'
 ])
 
 else
