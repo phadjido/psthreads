@@ -193,8 +193,8 @@ static inline psthread_t *stealing(int vp)
 #if 1
 	int GroupSize = 2;
 	int GroupId, GroupBaseVP;
-	char visited[16];
-	memset(visited, 0, 16);
+	char visited[MAX_VPS];
+	memset(visited, 0, MAX_VPS);
 	while (GroupSize <= _ps_nvps) {
 		GroupId = vp / GroupSize;
 		GroupBaseVP = GroupId*GroupSize;
@@ -631,7 +631,7 @@ void psthread_stats()
 #endif
 
 	printf("DEQUEUE METHODS: L:%c,R:%c,G:%c\n",
-		_ps_ldq?'H':'E', _ps_rdq? 'H':'E', _ps_gdq? 'H':'E');	
+		_ps_ldq?'H':'E', _ps_rdq? 'H':'E', _ps_gdq? 'H':'E');
 
 	printf("BINDCPU: %s\n", _ps_bindcpu ? "ENABLED": "DISABLED");
 
@@ -681,7 +681,7 @@ void psthread_stats()
 int psthread_init(int vps, unsigned long stacksize)
 {
 	psthread_t *thread;
-	long i;
+	long i = 0;
 	pthread_t dummy;
 	pthread_attr_t attr;
 	psthread_attr_t ps_attr = PSTHREAD_ATTR_INITIALIZER;
@@ -689,7 +689,7 @@ int psthread_init(int vps, unsigned long stacksize)
 	uth_t me;
 
 	printf("psthread_init(%d, %ld) called [%s]\n", vps, stacksize, PWD);
-	
+
 	_ps_gdata = (struct _ps_global_data *) _ort_calloc_aligned(sizeof(struct _ps_global_data), NULL);
 	_ps_nvps = vps;
 	_ps_vp_created=1;
@@ -704,7 +704,7 @@ int psthread_init(int vps, unsigned long stacksize)
 	printf("psthread_init: overriding for %d workers\n", _ps_nvps);
 
 	s = (char *) getenv("PSTHREADS_STEALING");
-	if (s != 0 && sscanf(s, "%ld", &i) == 1 && i > 0) {
+	if (s != 0 && sscanf(s, "%ld", &i) == 1 && i >= 0 && i <= 2) {
 		printf("work stealing...[%ld]\n", i);
 		_ps_stealing_env = i;
 		if ((_ps_stealing_env == _PS_WORK_STEALING_ENABLED) || (_ps_stealing_env == _PS_WORK_STEALING_DYNAMIC)) {
@@ -744,7 +744,7 @@ int psthread_init(int vps, unsigned long stacksize)
 
 	}
 #endif
-	
+
 	_queue_init(&_ps_ready_queue);
 	_queue_init(&_ps_reuse_queue);
 	for (i = 0; i < _ps_nvps; i++) {
@@ -753,7 +753,7 @@ int psthread_init(int vps, unsigned long stacksize)
 		_queue_init_bare(&_ps_lreuse_queue[i]);
 	}
 
-	
+
 	uth_init(_ps_stacksize);	/* Initialize uthlib */
 	_ps_stacksize = uth_get_stacksize();
 	me = uth_vp_init(0,0);	/* Initialize the first virtual processor (Posix Thread) */
@@ -762,11 +762,11 @@ int psthread_init(int vps, unsigned long stacksize)
 	/*
 	 * Initialize primordial thread for this virtual processor
 	 */
-	
+
 	thread = (psthread_t *) _ort_calloc_aligned(sizeof(psthread_t), NULL);
 	if (!thread)
 		return EAGAIN;
-	
+
 	thread->state = _PS_RUNNING;
 	thread->nchildren = -1;
 	thread->context = me; //uth_self_ex(0);	/* uth_vp_init has already assigned an underlying thread (uth) to the current virtual processor  */
@@ -783,7 +783,7 @@ int psthread_init(int vps, unsigned long stacksize)
 
 	if (!_ps_scheduler_thread(0))
 		return EAGAIN;
-	
+
 //	_ps_scheduler_thread(0)->context = uth_create(_ps_thread_main, _ps_scheduler_thread(0));
 #if defined(UTH_SI_SB)
 	sp = _ort_calloc_aligned_ex(_ps_stacksize, _ps_stacksize, NULL);
@@ -792,9 +792,9 @@ int psthread_init(int vps, unsigned long stacksize)
 #endif
 //	printf("sp = %p\n", sp);
 	_ps_scheduler_thread(0)->context = uth_create_sp(_ps_thread_main, _ps_scheduler_thread(0), _ps_stacksize, sp);
-	
-	/* 
-	 * Create the rest virtual processors 
+
+	/*
+	 * Create the rest virtual processors
 	 */
 	/*printf("_ps_nvps = %d\n", _ps_nvps);*/
 	if (_ps_nvps > 1) {
@@ -813,7 +813,7 @@ int psthread_init(int vps, unsigned long stacksize)
 			fprintf(stderr, "[PSTHREADS] warning: pthread_attr_setstacksize failed\n");
 			fflush(stderr);
 		}
-		
+
 		for (i = 1; i < _ps_nvps; i++) {
 			if (pthread_create(&dummy, &attr, _ps_init_vp, (void *)i) != 0) {
 				fprintf(stderr, "[PSTHREADS] error: pthread_create failed\n");
@@ -829,13 +829,13 @@ int psthread_init(int vps, unsigned long stacksize)
 			pthread_mutex_lock(&gm);
 		}
 		pthread_mutex_unlock(&gm);
-		
+
 	}
 
 	return 0;
 }
 
-/* 
+/*
  * Exit function called by each user-level thread for normal termination.
  * It never returns.
  */
@@ -849,7 +849,7 @@ static inline void _psthread_exit(psthread_t *me)
 	me->state = _PS_ZOMBIE;
 
 	/* If I am joinable */
-	if (me->detachstate == PSTHREAD_JOINABLE) {	
+	if (me->detachstate == PSTHREAD_JOINABLE) {
 		_lock_acquire(&me->parent->lock);
 		res =  (--me->parent->nchildren == 0) && (me->parent->state == _PS_WAITING);
 		_lock_release(&me->parent->lock);
@@ -885,8 +885,8 @@ static inline void _psthread_exit(psthread_t *me)
 				thread->cleanup = me;
 				uth_reinit(thread->context, _ps_thread_main, thread);
 				uth_switchto_ex(vp, NULL, thread->context);
-                        }
-                        else {
+			}
+			else {
 				thread->state = _PS_RUNNING;
 				thread->vpid = vp;
 				thread->cleanup = me;
@@ -910,7 +910,7 @@ void psthread_exit()
 	_psthread_exit(me);
 }
 
-/* 
+/*
  * Driver function. It is called by each newly created user-level thread.
  * It executes the user-provided work function and ensures proper termination
  */
@@ -925,21 +925,20 @@ static void _ps_thread_main(void *arg)
 
 #if defined(PS_P2P_HANDOFF)
 	_ps_recycle_cleanup(me, 0);
-#endif	
+#endif
 	/* Run thread main */
 	(*me->start)(me->arg);
-	
+
 	/* All done, time to go away */
 	_psthread_exit(me);
 }
 
 
-
-/* 
+/*
  * Thread creation function: it allocates the thread structure
  * and creates the corresponding underlying thread.
  */
-int psthread_create(psthread_t **t, psthread_attr_t *attr, void (*start)(void *arg), void *arg)	
+int psthread_create(psthread_t **t, psthread_attr_t *attr, void (*start)(void *arg), void *arg)
 {
 	psthread_t *me;
 	int res = 0;
@@ -974,7 +973,7 @@ int psthread_create(psthread_t **t, psthread_attr_t *attr, void (*start)(void *a
 	thread->arg = arg;
 	_lock_init(&thread->lock);
 	thread->prev = thread->next = NULL;
-	thread->vpid = -1;	
+	thread->vpid = -1;
 	thread->nchildren = 0;
 	thread->detachstate= (attr == NULL)? 0: attr->detachstate;
 	thread->staticmem = 0;
@@ -987,10 +986,10 @@ int psthread_create(psthread_t **t, psthread_attr_t *attr, void (*start)(void *a
 	 * as argument the psthread itself
 	 */
 	thread->context = NULL;
-	
+
 	/* Make thread runnable */
 	thread->state = _PS_NEW;
-	
+
 	if (thread->detachstate == PSTHREAD_JOINABLE) {
 		/* Increase my children */
 		_lock_acquire(&me->lock);
@@ -1001,11 +1000,10 @@ int psthread_create(psthread_t **t, psthread_attr_t *attr, void (*start)(void *a
 	/* Store the new thread descriptor */
 	*t = thread;
 
-
 	return res;
 }
 
-/* 
+/*
  * Thread creation function: it checks if an already allocated thread structure
  * is provided by the user
  */
@@ -1036,7 +1034,7 @@ char *psthread_alloc_desc(int n)
 	return (char *)t;
 }
 
-int psthread_create_ex(psthread_t **t, psthread_attr_t *attr, void (*start)(void *arg), void *arg)	
+int psthread_create_ex(psthread_t **t, psthread_attr_t *attr, void (*start)(void *arg), void *arg)
 {
 	psthread_t *me;
 	int res = 0;
@@ -1065,7 +1063,7 @@ int psthread_create_ex(psthread_t **t, psthread_attr_t *attr, void (*start)(void
 				//if (x % 1000 == 0) printf("!\n");
 			}
 			_lock_release(&thread->lock);
-		
+
 			//if (x > 1) printf("x = %ld\n", x);
 			goto label100;
 		} else {
@@ -1103,13 +1101,13 @@ label100:
 	thread->context = NULL;
 	thread->start = start;
 	thread->arg = arg;
-	thread->vpid = -1;	
+	thread->vpid = -1;
 	thread->detachstate= (attr == NULL)? 0: attr->detachstate;
 	thread->parent = me;
 
 	/* Make thread runnable */
 	thread->state = _PS_NEW;
-	
+
 	if (thread->detachstate == PSTHREAD_JOINABLE) {
 		/* Increase my children */
 		_lock_acquire(&me->lock);
@@ -1120,13 +1118,12 @@ label100:
 	/* Store the new thread descriptor */
 	*t = thread;
 
-
 	return res;
 }
 
 
-/* 
- * Parent thread waits for all its children to terminate 
+/*
+ * Parent thread waits for all its children to terminate
  */
 int psthread_waitall()
 {
@@ -1152,7 +1149,7 @@ int psthread_waitall()
  */
 int psthread_enqueue_tail_prv(psthread_t *thread, int queue)
 {
-	if ((queue < 0) && (queue >= _ps_nvps))
+	if ((queue < 0) || (queue >= _ps_nvps))
 		return EINVAL;
 
 	thread->state = _PS_RUNNABLE;
@@ -1163,7 +1160,7 @@ int psthread_enqueue_tail_prv(psthread_t *thread, int queue)
 
 int psthread_enqueue_tail(psthread_t *thread, int queue)
 {
-	if ((queue < -1) && (queue >= _ps_nvps))
+	if ((queue < -1) || (queue >= _ps_nvps))
 		return EINVAL;
 
 	thread->state = _PS_RUNNABLE;
@@ -1172,7 +1169,7 @@ int psthread_enqueue_tail(psthread_t *thread, int queue)
 #endif
 	if (queue == -1) {
 		_enqueue_tail(&_ps_ready_queue, thread);
-	} 
+	}
 	else {
 		_enqueue_tail(&_ps_local_ready_queue[queue], thread);
 	}
@@ -1183,7 +1180,7 @@ int psthread_enqueue_tail(psthread_t *thread, int queue)
 int psthread_enqueue_bunch_tail(psthread_t **thread, int n, int queue)
 {
 	int i;
-	if ((queue < -1) && (queue >= _ps_nvps))
+	if ((queue < -1) || (queue >= _ps_nvps))
 		return EINVAL;
 
 	for (i = 0; i < n; i++) {
@@ -1198,10 +1195,10 @@ int psthread_enqueue_bunch_tail(psthread_t **thread, int n, int queue)
 #if defined(PS_GLOBAL_QUEUE_ONLY)
 	queue = -1;
 #endif
-#if 0
+#if 1
 	if (queue == -1) {
 		_enqueue_bunch_tail(&_ps_ready_queue, thread[0], thread[n-1]);
-	} 
+	}
 	else {
 		_enqueue_bunch_tail(&_ps_local_ready_queue[queue], thread[0], thread[n-1]);
 	}
@@ -1211,7 +1208,7 @@ int psthread_enqueue_bunch_tail(psthread_t **thread, int n, int queue)
 
 int psthread_enqueue_head(psthread_t *thread, int queue)
 {
-	if ((queue < -1) && (queue >= _ps_nvps))
+	if ((queue < -1) || (queue >= _ps_nvps))
 		return EINVAL;
 
 	thread->state = _PS_RUNNABLE;
@@ -1221,7 +1218,7 @@ int psthread_enqueue_head(psthread_t *thread, int queue)
 
 	if (queue == -1) {
 		_enqueue_head(&_ps_ready_queue, thread);
-	} 
+	}
 	else {
 		_enqueue_head(&_ps_local_ready_queue[queue], thread);
 	}
@@ -1235,9 +1232,9 @@ int psthread_enqueue(psthread_t *thread, int queue)
 }
 
 
-/* 
+/*
  * Return a pointer to the descriptor of the calling thread
- */ 
+ */
 extern void *_uth_self_from_stack();
 
 psthread_t *psthread_self(void)
@@ -1253,7 +1250,7 @@ psthread_t *psthread_self_ex(int vp)
 }
 
 
-/* 
+/*
  * Return elapsed time in sec
  */
 double psthread_gettime()
@@ -1261,7 +1258,7 @@ double psthread_gettime()
 	return uth_gettime();
 }
 
-/* 
+/*
  * Suspend virtual processor for ms milliseconds
  */
 void psthread_vp_sleep(int ms)
@@ -1429,7 +1426,7 @@ void psthread_cond_broadcast (psthread_cond_t *cond)
 /*
  * Thread Local Storage (not fully functional)
  */
- 
+
 static int tls_keys[MAX_TLS_KEYS] = {0};
 static pthread_mutex_t tls_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -1548,7 +1545,7 @@ int psthread_barrier_destroy (psthread_barrier_t *barrier)
 	_lock_acquire(&barrier->mutex);
 
 	/*
-	 * Check whether any threads are known to be waiting; report	
+	 * Check whether any threads are known to be waiting; report
 	 * "BUSY" if so.
 	 */
 	if (barrier->counter != barrier->threshold) {
@@ -1600,7 +1597,7 @@ int psthread_barrier_wait (psthread_barrier_t *barrier)
 		 * some special serial code following the barrier.
 		 */
 		status = -1;
-	} 
+	}
 	else {
 		/*
 		 * Wait until the barrier's cycle changes, which means
@@ -1643,7 +1640,7 @@ int psthread_barrier_init_ex (psthread_barrier_ex_t *barrier, int count)
 	barrier->sense = 0;
 	barrier->nthr = count;
 	for (--count;  count >= 0; count--)
-		barrier->arrived[count].value = 0;    
+		barrier->arrived[count].value = 0;
 #endif
 
 	return 0;
@@ -1685,7 +1682,7 @@ int psthread_barrier_wait_ex (psthread_barrier_ex_t *barrier, int id)
 
 	if (barrier->nthr == 1) return status;
 	sense = !( barrier->sense );
-	if (id > 0) 
+	if (id > 0)
 	{
 		barrier->arrived[id].value = sense;
 		FENCE;
@@ -1695,7 +1692,7 @@ int psthread_barrier_wait_ex (psthread_barrier_ex_t *barrier, int id)
 	{
 		for (id = 1; id < barrier->nthr; id++)
 			PS_WAIT_WHILE( barrier->arrived[id].value != sense, YIELD_IMMEDIATELY );
-		barrier->sense = sense;      /* Release them all */                
+		barrier->sense = sense;      /* Release them all */
 		FENCE;
 	}
 	return status;
