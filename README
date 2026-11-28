@@ -16,3 +16,17 @@ it is distributed according to the Mozilla Public License Version
 
 For more information: 
 Read the included documentation file.
+
+
+
+
+-----------------------------------------------------------------------
+
+./configure \
+    CC="clang -std=gnu17" \
+    CPPFLAGS="-D_XOPEN_SOURCE=700 -D_DARWIN_C_SOURCE" \
+    CFLAGS="-O2 -Wno-deprecated-declarations" \
+    --with-csm=mcsc \
+    --with-sync=mutex \
+    --with-maxvps=64 \
+    --enable-stealing
